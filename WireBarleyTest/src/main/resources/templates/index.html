@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+ 
+<html lang="en">
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+	<style>
+		#subBtn{
+		 
+		    font-size: 25px;
+		    padding: 5px 15px;
+		
+		}
+		.bold{
+			
+			font-weight: 900;
+		}
+		#msgBox{
+		
+			color: black;
+			
+		}
+	</style>
+<body>
+
+<script>
+
+
+$( document ).ready(function() {
+  
+		getRateInfo();
+	
+	
+
+	 $("#countryList").change(function(){
+		     
+		  getRateInfo();
+		  
+    });	
+	  
+	  
+	$('#subBtn').click(function(){
+		
+		var price = Number($("#price").val());
+		var rate = 	Number($("#rate").text().replace(/,/gi,""));		
+		
+		if(price >  0 && price <= 10000){
+			
+			var receivable = (Math.round(Number(price*rate) * 100) / 100).toFixed(2);
+			receivable = receivable.toLocaleString();
+			
+			$("#msgBox").css("color","black");
+			$('#msgBox').text("수취금액은 " + receivable +" " + $("#countryList option:selected").val() + "입니다.");
+			
+		}else{
+			
+			$("#msgBox").css("color","red");
+			$("#price").val("");
+			$('#msgBox').text("송금액이 바르지 않습니다.");
+		
+		}
+		  
+	});
+
+});
+
+
+	function changeUnit(){
+		
+		$("#unit").text($("#countryList option:selected").val() + "/USD");
+		$('#msgBox').text("");		
+		$("#price").val("");
+	}
+	
+	function getRateInfo(){
+		
+	    $.ajax({
+	        url:'/getApi',
+	        type:'POST',
+	        data: {
+	        	source : 'USD'
+	        },
+	        dataType:'text',
+	        beforeSend:function(jqXHR) {
+	            console.log("BeforAjaxCall");
+	        },// 서버 요청 전 호출 되는 함수 return false; 일 경우 요청 중단
+	        success: function(data) {
+	            console.log("Call Sucess!");
+	            var getRateInfo = JSON.parse(data);	     
+	            var nowCountry = $("#countryList option:selected").val();
+	            var countryRate = getRateInfo["quotes"]["USD" + nowCountry];
+	            countryRate = (Math.round(Number(countryRate) * 100) / 100).toFixed(2);
+	            countryRate = countryRate.toLocaleString();
+				$("#rate").text(countryRate);
+				changeUnit();
+	        },// 요청 완료 시
+	        error:function(jqXHR) {
+	            console.log("Call Fail!");
+	        }// 요청 실패.
+	    });
+		
+	}
+
+
+	
+</script>
+	<div>
+		<h1>환율 계산</h1>
+		<span>송금국가 : 미국(USD)</span>
+		<br><br>
+		<span>수취국가 : 
+			<select id = "countryList" >
+				<option value="KRW">한국(KRW)</option>
+				<option value="JPY">일본(JPY)</option>
+				<option value="PHP">필리핀(PHP)</option>
+			</select>
+		</span>
+		<br><br>
+		<span> 환율 : </span> <span id ="rate" class="bold"></span> 
+		<span id ="unit"></span>
+		<br><br>
+		<span> 송금액 : <input type ="number" id ="price"> USD</span>
+		<br><br>
+		<input type = "button" value = "Submit" id ="subBtn"> 
+	</div>
+	<br><br>
+	<div id="msgBox">
+	
+	</div>
+	<br><br>
+	
+	
+	
+</body>
+</html>
+ 
+ 
+
+ 
